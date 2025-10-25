@@ -1,0 +1,19 @@
+# Rust / Soroban
+/target
+**/target
+**/release
+
+# Node
+node_modules
+.env
+
+# Next.js build output
+.next
+.next/**
+
+# Local env overrides
+.env.local
+.env.*.local
+
+# Misc
+.DS_Store
