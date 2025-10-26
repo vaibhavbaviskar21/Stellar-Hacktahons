@@ -1,0 +1,1 @@
+E:\Engineering\Hackathons\Stellar\blockhire-contracts\target\wasm32-unknown-unknown\release\document_verification.wasm: E:\Engineering\Hackathons\Stellar\blockhire-contracts\document-verification\src\lib.rs

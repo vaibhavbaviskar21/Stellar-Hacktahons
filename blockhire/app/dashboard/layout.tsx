@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
+import { useWallet } from "@/contexts/WalletContext"
 
 export default function DashboardLayout({
   children,
@@ -14,15 +15,28 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const { isConnected } = useWallet()
 
   useEffect(() => {
     const userRole = localStorage.getItem("userRole")
+    
+    // Check both user role and wallet connection
     if (!userRole) {
       router.push("/login")
-    } else {
-      setIsLoading(false)
+      return
     }
-  }, [router])
+    
+    // If user session exists but wallet disconnected, redirect to login
+    if (!isConnected) {
+      const walletKey = localStorage.getItem('walletPublicKey')
+      if (!walletKey) {
+        router.push("/login")
+        return
+      }
+    }
+    
+    setIsLoading(false)
+  }, [router, isConnected])
 
   if (isLoading) {
     return (

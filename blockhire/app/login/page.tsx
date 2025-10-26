@@ -9,18 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import dynamic from "next/dynamic"
-
-// Dynamically import WalletButton with no SSR to prevent hydration issues
-const WalletButton = dynamic(() => import('@/components/WalletButton'), {
-  ssr: false,
-  loading: () => <div className="h-10 w-40 animate-pulse bg-gray-200 rounded" />
-})
+import { useWallet } from "@/contexts/WalletContext"
 
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const roleParam = searchParams.get("role") as "candidate" | "recruiter" | null
+  const { isConnected, publicKey, connecting, connect, error: walletError } = useWallet()
 
   const [role, setRole] = useState<"candidate" | "recruiter">(roleParam || "candidate")
   const [email, setEmail] = useState("")
@@ -28,23 +23,37 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Check if wallet is connected
+    if (!isConnected) {
+      alert("Please connect your wallet first")
+      return
+    }
+
     setLoading(true)
 
-    // Simulate login
-    setTimeout(() => {
-      // Store user session
-      localStorage.setItem("userRole", role)
-      localStorage.setItem("userEmail", email)
-      localStorage.setItem("userId", `user_${Math.random().toString(36).substr(2, 9)}`)
+    // Store user session with wallet address
+    localStorage.setItem("userRole", role)
+    localStorage.setItem("userEmail", email)
+    localStorage.setItem("userId", `user_${Math.random().toString(36).substr(2, 9)}`)
 
-      // Redirect based on role
+    // Redirect based on role
+    setTimeout(() => {
       if (role === "candidate") {
         router.push("/dashboard/candidate")
       } else {
         router.push("/dashboard/recruiter")
       }
       setLoading(false)
-    }, 500)
+    }, 300)
+  }
+
+  const handleConnectWallet = async () => {
+    try {
+      await connect()
+    } catch (e) {
+      console.error("Failed to connect wallet:", e)
+    }
   }
 
   return (
@@ -60,8 +69,36 @@ export default function LoginPage() {
           <p className="text-muted-foreground">Decentralized Recruitment Platform</p>
         </div>
 
-        <div className="mb-6 flex items-center justify-center">
-          <WalletButton />
+        {/* Wallet Connection Section */}
+        <div className="mb-6">
+          {!isConnected ? (
+            <Card className="border-border bg-secondary/50">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-3">
+                  <p className="text-sm text-muted-foreground">Connect your Stellar wallet to continue</p>
+                  <Button
+                    onClick={handleConnectWallet}
+                    disabled={connecting}
+                    className="w-full bg-primary hover:bg-primary/90"
+                  >
+                    {connecting ? "Connecting..." : "Connect Wallet"}
+                  </Button>
+                  {walletError && <p className="text-sm text-red-500">{walletError}</p>}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-primary/50 bg-primary/5">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-2">
+                  <p className="text-sm font-medium text-primary">✓ Wallet Connected</p>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {publicKey?.substring(0, 8)}...{publicKey?.substring(publicKey.length - 8)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <Card className="border-border">
@@ -117,13 +154,15 @@ export default function LoginPage() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={loading || !email}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                disabled={loading || !email || !isConnected}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
               >
-                {loading ? "Signing in..." : "Sign In with Stellar Wallet"}
+                {loading ? "Signing in..." : "Sign In"}
               </Button>
 
-              <p className="text-center text-sm text-muted-foreground">Demo: Use any email to login</p>
+              {!isConnected && (
+                <p className="text-center text-sm text-amber-600">Please connect your wallet first</p>
+              )}
             </form>
           </CardContent>
         </Card>
