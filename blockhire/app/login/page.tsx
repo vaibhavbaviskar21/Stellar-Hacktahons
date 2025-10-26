@@ -2,13 +2,20 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import dynamic from "next/dynamic"
+
+// Dynamically import WalletButton with no SSR to prevent hydration issues
+const WalletButton = dynamic(() => import('@/components/WalletButton'), {
+  ssr: false,
+  loading: () => <div className="h-10 w-40 animate-pulse bg-gray-200 rounded" />
+})
 
 export default function LoginPage() {
   const router = useRouter()
@@ -51,6 +58,10 @@ export default function LoginPage() {
             <span className="text-2xl font-bold text-foreground">BlockHire</span>
           </div>
           <p className="text-muted-foreground">Decentralized Recruitment Platform</p>
+        </div>
+
+        <div className="mb-6 flex items-center justify-center">
+          <WalletButton />
         </div>
 
         <Card className="border-border">

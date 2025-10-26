@@ -9,7 +9,7 @@ const geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "BlockHire - Decentralized Recruitment",
   description: "Transparent, trustless hiring powered by blockchain",
-    generator: 'v0.app'
+    generator: ''
 }
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} bg-background text-foreground`}>{children}</body>
+      <body className={`${geistSans.className} bg-background text-foreground`} suppressHydrationWarning>{children}</body>
     </html>
   )
 }

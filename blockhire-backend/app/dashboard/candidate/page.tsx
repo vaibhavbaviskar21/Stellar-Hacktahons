@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { FileText, Calendar, TrendingUp, Lock, Upload, Eye } from "lucide-react"
+import UploadResume from "@/components/UploadResume"
 import { mockCandidateData } from "@/lib/mock-data"
 
 export default function CandidateDashboard() {
@@ -126,7 +127,10 @@ export default function CandidateDashboard() {
             <CardDescription>Add resume, certificates, and portfolio</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">Upload Now</Button>
+            {/* UploadResume handles sending the file to backend -> web3.storage (if configured) */}
+            <div className="max-w-md">
+              <UploadResume />
+            </div>
           </CardContent>
         </Card>
 

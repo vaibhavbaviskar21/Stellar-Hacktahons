@@ -37,6 +37,41 @@ app.post('/upload', upload.single('file'), (req, res) => {
   res.json({ ok: true, file: { path: req.file.path, filename: req.file.filename, url: fileUrl } });
 });
 
+// Upload to IPFS via web3.storage (optional)
+// Requires environment variable WEB3_STORAGE_TOKEN to be set with an API token.
+try {
+  var { Web3Storage, File: Web3File } = require('web3.storage')
+} catch (e) {
+  // web3.storage is optional; endpoint will return a helpful error if not installed/configured
+}
+
+app.post('/upload-ipfs', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'no file uploaded' });
+
+  const token = process.env.WEB3_STORAGE_TOKEN
+  if (!token || !Web3Storage) {
+    // Still return local file info, but tell the client IPFS is not configured
+    return res.status(500).json({ ok: false, error: 'WEB3_STORAGE_TOKEN not configured or web3.storage not installed', file: { path: req.file.path, filename: req.file.filename } });
+  }
+
+  try {
+    const client = new Web3Storage({ token })
+    const data = fs.readFileSync(req.file.path)
+    const file = new Web3File([data], req.file.originalname)
+    const cid = await client.put([file])
+
+    // Optionally keep local copy for dev; but return CID and a public gateway URL
+    const gateway = `https://dweb.link/ipfs/${cid}/${encodeURIComponent(req.file.originalname)}`
+
+    // remove local file to save space (optional)
+    try { fs.unlinkSync(req.file.path) } catch (e) {}
+
+    return res.json({ ok: true, cid, gateway })
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: String(err), file: { path: req.file.path, filename: req.file.filename } })
+  }
+})
+
 // Serve uploaded files for quick local dev
 app.use('/uploads', express.static(uploadsDir));
 
